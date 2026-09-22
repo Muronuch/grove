@@ -1,0 +1,38 @@
+# A second fixture with a different database engine, proving the volume-copy
+# driver is not Postgres-specific.
+
+[project]
+name = "nodemysql"
+default_branch = "master"
+
+[compose]
+files = ["docker-compose.yml"]
+
+[worktree]
+dir = "worktrees"
+
+[[service]]
+name = "api"
+port = 3000
+default = true
+
+[[service]]
+name = "db"
+port = 3306
+tcp = true
+
+[[stateful]]
+service = "db"
+volume = "mysqldata"
+inputs = ["api/migrations/**", "api/seed/**"]
+stop_grace = "90s"
+
+  [stateful.prepare]
+  mode = "run"
+  service = "api"
+  command = ["node", "migrate.js"]
+
+[[doctor.http]]
+service = "api"
+path = "/healthz"
+expect_status = 200

@@ -1,0 +1,42 @@
+services:
+  web:
+    build: ./web
+    command: ["npm", "run", "dev"]
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+  api:
+    build: ./api
+    environment:
+      DATABASE_URL: postgres://app:app@db:5432/app?sslmode=disable
+    # Migrations are read from the worktree, not baked into the image, so a
+    # migration written on a branch applies without a rebuild.
+    volumes:
+      - ./api/migrations:/app/migrations:ro
+      - ./api/seed:/app/seed:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 2s
+      timeout: 3s
+      retries: 40
+
+volumes:
+  pgdata:

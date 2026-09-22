@@ -1,0 +1,29 @@
+# A project that does everything that makes parallel environments impossible.
+# `grove doctor` must name each problem with a stable code and a fix.
+services:
+  web:
+    build: ./web
+    # A fixed container name: only one can exist on the engine at a time.
+    container_name: "hostile-web"
+    ports:
+      - "8080:8080"
+    environment:
+      # Baked in at build time, so every env would talk to the same backend.
+      API_URL: "http://localhost:8080"
+    volumes:
+      # An absolute host path, shared by every env.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+    # A pinned name: compose would not prefix it, so every env shares it.
+    name: "hostile_pgdata"

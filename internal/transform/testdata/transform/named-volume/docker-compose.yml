@@ -1,0 +1,14 @@
+services:
+  app:
+    image: nginx:alpine
+    volumes:
+      - data:/data
+      - shared:/shared
+      - legacy:/legacy
+volumes:
+  data:
+    name: "hardcoded-data-name"
+  shared: {}
+  legacy:
+    external: true
+    name: "some-external-volume"

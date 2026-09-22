@@ -1,0 +1,32 @@
+[project]
+name = "hostile"
+default_branch = "master"
+
+[compose]
+files = ["docker-compose.yml"]
+
+[[service]]
+name = "web"
+port = 8080
+default = true
+
+# The "worker" entry is gone: no such compose service exists.
+
+[[service]]
+name = "db"
+port = 5432
+tcp = true
+
+[env.web]
+# The URL is no longer baked in; each env gets its own.
+API_URL = "{{ url \"web\" }}/api"
+
+[[stateful]]
+service = "db"
+volume = "pgdata"
+inputs = ["migrations/**"]
+
+  [stateful.prepare]
+  mode = "run"
+  service = "web"
+  command = ["sh", "-c", "echo migrated"]

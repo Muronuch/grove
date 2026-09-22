@@ -1,0 +1,9 @@
+services:
+  app:
+    image: nginx:alpine
+    container_name: "my-fixed-app"
+    ports: ["80:80"]
+    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: any

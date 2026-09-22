@@ -1,0 +1,68 @@
+# The finished configuration for the go-react-pg fixture: what `grove init`
+# drafts, with the TODOs filled in. Integration tests expect this to pass
+# `grove doctor` with no findings.
+
+[project]
+name = "goreactpg"
+default_branch = "master"
+max_slots = 8
+
+[compose]
+files = ["docker-compose.yml"]
+
+[worktree]
+dir = "worktrees"
+copy = []
+
+[[service]]
+name = "web"
+port = 5173
+default = true
+headless = false
+websocket_path = "/"
+# Vite only completes the HMR upgrade when this subprotocol is offered.
+websocket_protocol = "vite-hmr"
+
+[[service]]
+name = "api"
+port = 8080
+# Served on the default host too, so the frontend calls /api with no CORS and
+# no baked-in API URL.
+paths = ["/api", "/ws", "/healthz"]
+websocket_path = "/ws"
+
+[[service]]
+name = "db"
+port = 5432
+tcp = true
+
+[env.api]
+PUBLIC_URL = "{{ url \"web\" }}"
+
+[[stateful]]
+service = "db"
+volume = "pgdata"
+inputs = ["api/migrations/**", "api/seed/**"]
+
+  [stateful.prepare]
+  mode = "run"
+  service = "api"
+  command = ["api", "migrate"]
+
+[[cache]]
+name = "gomod"
+path = "/go/pkg/mod"
+services = ["api"]
+
+[[doctor.http]]
+service = "api"
+path = "/healthz"
+expect_status = 200
+
+# Proves that the API reached through env A's hostname is env A's API, talking
+# to env A's database.
+[[doctor.http]]
+service = "api"
+path = "/api/whoami"
+expect_status = 200
+expect_body_contains = "\"db_marker\":\"{{ .Env }}\""

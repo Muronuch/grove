@@ -1,0 +1,8 @@
+{
+  "name": "fixture-node-mysql",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "mysql2": "^3.11.0"
+  }
+}

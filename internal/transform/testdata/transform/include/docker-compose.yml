@@ -1,0 +1,6 @@
+include:
+  - parts.yml
+services:
+  app:
+    image: nginx:alpine
+    ports: ["80:80"]

@@ -1,0 +1,20 @@
+[project]
+name = "demo"
+[[service]]
+name = "web"
+port = 5173
+default = true
+[[service]]
+name = "api"
+port = 8080
+[[cache]]
+name = "gomod"
+path = "/go/pkg/mod"
+services = ["api"]
+[[cache]]
+name = "npm"
+path = "/root/.npm"
+services = ["web"]
+[limits.api]
+mem = "512m"
+cpus = 1.5

@@ -1,0 +1,7 @@
+services:
+  api:
+    image: golang:1-alpine
+    command: ["sleep", "1"]
+  web:
+    image: node:22-alpine
+    command: ["sleep", "1"]

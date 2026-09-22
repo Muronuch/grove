@@ -1,0 +1,6 @@
+[project]
+name = "demo"
+[[service]]
+name = "app"
+port = 8080
+default = true

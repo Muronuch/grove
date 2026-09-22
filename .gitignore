@@ -1,0 +1,5 @@
+/dist/
+/grove
+/grove.exe
+*.test
+.DS_Store

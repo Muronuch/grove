@@ -1,0 +1,6 @@
+services:
+  common:
+    image: alpine:3.20
+    environment:
+      FROM_BASE: "yes"
+    command: ["sleep", "1"]

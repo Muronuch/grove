@@ -1,0 +1,10 @@
+[project]
+name = "demo"
+[[service]]
+name = "web"
+port = 5173
+default = true
+headless = false
+[[service]]
+name = "api"
+port = 8080

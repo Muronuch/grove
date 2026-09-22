@@ -1,0 +1,8 @@
+[project]
+name = "demo"
+[compose]
+profiles = ["tools"]
+[[service]]
+name = "app"
+port = 80
+default = true

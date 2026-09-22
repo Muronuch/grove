@@ -1,0 +1,11 @@
+# The router image used by released versions. GoReleaser has already built the
+# binary, so this stage only packages it.
+#
+# scratch on purpose: the router terminates browser traffic, and every byte it
+# does not contain is a byte that cannot be used against it. It needs no shell,
+# no CA bundle and no package manager; Docker provides /etc/resolv.conf, which
+# is all the pure-Go resolver reads.
+FROM scratch
+COPY grove /grove
+EXPOSE 80 9180
+ENTRYPOINT ["/grove", "router-serve"]

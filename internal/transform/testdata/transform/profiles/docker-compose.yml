@@ -1,0 +1,11 @@
+services:
+  app:
+    image: nginx:alpine
+  tools:
+    image: busybox
+    profiles: ["tools"]
+    command: ["sleep", "1"]
+  never:
+    image: busybox
+    profiles: ["prod"]
+    command: ["sleep", "1"]

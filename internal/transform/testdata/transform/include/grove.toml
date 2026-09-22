@@ -1,0 +1,9 @@
+[project]
+name = "demo"
+[[service]]
+name = "app"
+port = 80
+default = true
+[[service]]
+name = "included"
+port = 7000

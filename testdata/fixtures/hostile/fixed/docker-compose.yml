@@ -1,0 +1,21 @@
+# The same project after applying every fix grove doctor suggested.
+services:
+  web:
+    build: ./web
+    # container_name removed: a fixed name allows only one env.
+    # ports removed: grove reaches services through the router.
+    environment:
+      # Injected per env by grove.toml's [env.web] block.
+      API_URL: "${API_URL:-}"
+    # The docker socket mount is gone; it was shared by every env.
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  # No pinned name, so compose prefixes it per env.
+  pgdata:

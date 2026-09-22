@@ -1,0 +1,63 @@
+# Release pipeline: one binary per platform, plus the multi-arch router image.
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go run ./internal/finding/gen -check -out docs/doctor-codes.md
+
+builds:
+  - id: grove
+    main: ./cmd/grove
+    binary: grove
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w -X github.com/Muronuch/grove/internal/meta.Version={{ .Version }}
+
+archives:
+  - formats: [tar.gz]
+    files: [README.md, LICENSE, THIRD_PARTY_NOTICES, docs/*]
+
+nfpms:
+  - id: packages
+    formats: [deb, rpm]
+    maintainer: the grove authors
+    description: Parallel per-branch development environments for coding agents
+    license: Apache-2.0
+    bindir: /usr/bin
+
+brews:
+  - repository:
+      owner: Muronuch
+      name: homebrew-tap
+    description: Parallel per-branch development environments for coding agents
+    license: Apache-2.0
+    test: |
+      system "#{bin}/grove", "version"
+
+dockers:
+  - id: router-amd64
+    image_templates: ["ghcr.io/muronuch/grove-router:{{ .Version }}-amd64"]
+    dockerfile: Dockerfile.router
+    use: buildx
+    goarch: amd64
+    build_flag_templates: ["--platform=linux/amd64"]
+  - id: router-arm64
+    image_templates: ["ghcr.io/muronuch/grove-router:{{ .Version }}-arm64"]
+    dockerfile: Dockerfile.router
+    use: buildx
+    goarch: arm64
+    build_flag_templates: ["--platform=linux/arm64"]
+
+docker_manifests:
+  - name_template: ghcr.io/muronuch/grove-router:{{ .Version }}
+    image_templates:
+      - ghcr.io/muronuch/grove-router:{{ .Version }}-amd64
+      - ghcr.io/muronuch/grove-router:{{ .Version }}-arm64
+
+changelog:
+  use: github
+  sort: asc

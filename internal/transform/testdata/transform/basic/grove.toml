@@ -1,0 +1,20 @@
+[project]
+name = "demo"
+
+[[service]]
+name = "web"
+port = 5173
+default = true
+
+[[service]]
+name = "api"
+port = 8080
+paths = ["/api"]
+
+[[service]]
+name = "db"
+port = 5432
+tcp = true
+
+[env.api]
+PUBLIC_URL = "{{ url \"web\" }}"

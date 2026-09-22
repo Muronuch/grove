@@ -1,0 +1,38 @@
+services:
+  api:
+    build: ./api
+    environment:
+      DATABASE_HOST: db
+      DATABASE_USER: app
+      DATABASE_PASSWORD: app
+      DATABASE_NAME: app
+    volumes:
+      - ./api/migrations:/app/migrations:ro
+      - ./api/seed:/app/seed:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.4
+    command: ["--mysql-native-password=OFF"]
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: app
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+    volumes:
+      - mysqldata:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uapp", "-papp"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+      start_period: 30s
+
+volumes:
+  mysqldata:

@@ -1,0 +1,16 @@
+services:
+  app:
+    image: nginx:alpine
+    networks: [front]
+  worker:
+    image: busybox
+    command: ["sleep", "1"]
+    networks: [back]
+  bridge:
+    image: busybox
+    command: ["sleep", "1"]
+    networks: [front, back]
+networks:
+  front: {}
+  back:
+    internal: true

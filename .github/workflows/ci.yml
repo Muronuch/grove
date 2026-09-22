@@ -1,0 +1,90 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 3 * * *"
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      - name: gofmt
+        run: |
+          out=$(gofmt -l ./cmd ./internal)
+          if [ -n "$out" ]; then echo "$out"; exit 1; fi
+      - run: go vet ./...
+      - name: staticcheck
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          staticcheck ./...
+      - name: doctor-codes.md is current
+        run: go run ./internal/finding/gen -check -out docs/doctor-codes.md
+      - run: go test ./...
+      - name: cross compile
+        run: |
+          GOOS=linux GOARCH=amd64 go build ./...
+          GOOS=linux GOARCH=arm64 go build ./...
+          GOOS=darwin GOARCH=arm64 go build ./...
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      - run: docker version
+      - run: go test -tags=integration -timeout=45m ./...
+
+  unit-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      - run: go test ./...
+
+  # The compatibility matrix is the project's main quality claim: `grove init`
+  # followed by `grove doctor`, unmodified, against real open-source projects.
+  compat:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - { name: gitea, repo: https://github.com/go-gitea/gitea }
+          - { name: plausible, repo: https://github.com/plausible/analytics }
+          - { name: outline, repo: https://github.com/outline/outline }
+          - { name: cal, repo: https://github.com/calcom/cal.com }
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: grove }
+      - uses: actions/setup-go@v5
+        with: { go-version: '1.24', cache: true, cache-dependency-path: grove/go.sum }
+      - run: go build -o "$RUNNER_TEMP/grove" ./cmd/grove
+        working-directory: grove
+      - run: git clone --depth 1 ${{ matrix.project.repo }} target
+      - name: init and doctor
+        working-directory: target
+        env:
+          GROVE_SOURCE: ${{ github.workspace }}/grove
+        run: |
+          "$RUNNER_TEMP/grove" init --yes
+          "$RUNNER_TEMP/grove" doctor --json > "$RUNNER_TEMP/${{ matrix.project.name }}.json" || true
+          cat "$RUNNER_TEMP/${{ matrix.project.name }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compat-${{ matrix.project.name }}
+          path: ${{ runner.temp }}/${{ matrix.project.name }}.json

@@ -1,0 +1,8 @@
+[project]
+name = "demo"
+[compose]
+shared_volumes = ["shared"]
+[[service]]
+name = "app"
+port = 80
+default = true
